@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.trustedanalytics</groupId>
         <artifactId>trustedanalytics-cloud-parent</artifactId>
-        <version>0.4.0</version>
+        <version>0.4.1</version>
     </parent>
 
     <dependencies>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.trustedanalytics</groupId>
             <artifactId>object-store</artifactId>
-            <version>0.4.0</version>
+            <version>0.4.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
