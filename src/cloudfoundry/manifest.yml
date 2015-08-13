@@ -1,0 +1,14 @@
+---
+applications:
+- name: hdfs-uploader
+  memory: 1G
+  instances: 1
+  host: hdfs-uploader
+  path: target/uploader-${version}.jar
+  services:
+    - sso
+    - hdfs-instance
+    - dataaquisitionservice
+  env:
+    SPRING_PROFILES_ACTIVE: "cloud,hdfs"
+    HDFS_USER: "cf"
