@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.trustedanalytics</groupId>
             <artifactId>object-store</artifactId>
-            <version>0.4.1</version>
+            <version>0.4.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
