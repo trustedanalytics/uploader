@@ -19,6 +19,7 @@ import org.trustedanalytics.store.ObjectStore;
 import org.trustedanalytics.store.ObjectStoreConfiguration;
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
+import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
 import org.trustedanalytics.uploader.core.stream.decoder.GzipStreamDecoder;
 import org.trustedanalytics.uploader.core.stream.decoder.ZipStreamDecoder;
@@ -46,6 +47,9 @@ public class UploaderConfiguration {
 
     @Value("${services.dataacquisition.url}")
     private String dataAcquisitionUrl;
+
+    @Value("${services.user-management.url}")
+    private String userManagementUrl;
 
     @Bean
     public Function<InputStream, InputStream> streamDecoder() {
@@ -82,4 +86,13 @@ public class UploaderConfiguration {
             .target(DataAcquisitionClient.class, dataAcquisitionUrl);
     }
 
+    @Bean
+    public UserManagementClient userManagementClient() {
+        return Feign.builder()
+            .encoder(new JacksonEncoder())
+            .decoder(new JacksonDecoder())
+            .logger(new ScramblingSlf4jLogger(UserManagementClient.class))
+            .logLevel(Logger.Level.FULL)
+            .target(UserManagementClient.class, userManagementUrl);
+    }
 }

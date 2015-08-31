@@ -19,11 +19,15 @@ import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @ControllerAdvice
 public class UploadExceptionHandler {
@@ -39,5 +43,12 @@ public class UploadExceptionHandler {
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Upload exception")
     public void fileUploadException(Exception ex) {
         LOGGER.error("File upload exception", ex);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(FORBIDDEN)
+    public void accessForbidden(HttpServletResponse response) throws IOException {
+        LOGGER.warn("Access forbidden.");
+        response.sendError(403, "You do not have access to requested organization.");
     }
 }

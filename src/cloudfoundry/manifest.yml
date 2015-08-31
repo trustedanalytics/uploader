@@ -9,6 +9,7 @@ applications:
     - sso
     - hdfs-instance
     - dataaquisitionservice
+    - user-management
   env:
     SPRING_PROFILES_ACTIVE: "cloud,hdfs"
     HDFS_USER: "cf"

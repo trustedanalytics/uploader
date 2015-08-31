@@ -18,3 +18,4 @@ cf:
 
 services:
   dataacquisition.url: ${vcap.services.dataaquisitionservice.credentials.host:http://localhost:9997}
+  user-management.url: ${vcap.services.user-management.credentials.host:http://localhost:9998}

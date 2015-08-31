@@ -18,9 +18,11 @@ package org.trustedanalytics.uploader.rest;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
+import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
 import org.trustedanalytics.uploader.service.UploadService;
+import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
@@ -33,12 +35,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,28 +63,44 @@ public class UploadController {
     private final UploadService uploadService;
     private final Function<Authentication, String> tokenExtractor;
     private final DataAcquisitionClient dataAcquisitionClient;
+    private final UserManagementClient userManagementClient;
 
     @Autowired
     public UploadController(UploadService uploadService,
         Function<Authentication, String> tokenExtractor,
-        DataAcquisitionClient dataAcquisitionClient) {
+        DataAcquisitionClient dataAcquisitionClient, UserManagementClient userManagementClient) {
         this.uploadService = uploadService;
         this.tokenExtractor = tokenExtractor;
         this.dataAcquisitionClient = dataAcquisitionClient;
+        this.userManagementClient = userManagementClient;
     }
 
-    @RequestMapping(value = "/rest/upload", method = RequestMethod.POST)
+    @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.CREATED)
-    public void upload(HttpServletRequest request) throws IOException, FileUploadException {
+    public void upload(HttpServletRequest request, @PathVariable("orgGuid") String orgGuid) throws IOException, FileUploadException {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
-        final ServletFileUpload upload = new ServletFileUpload();
-        upload.setProgressListener(new FileUploadListener());
-
-        final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request));
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if(isOrgAccessible(orgGuid, auth)) {
 
-        dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
+            final ServletFileUpload upload = new ServletFileUpload();
+            upload.setProgressListener(new FileUploadListener());
+            final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request));
+            dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
+        }
+        else {
+            throw new AccessDeniedException("You do not have access to requested organization.");
+        }
+    }
+
+    private boolean isOrgAccessible (String orgGuid, Authentication auth) {
+
+        List<CcOrgPermission> orgPermissions = userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth));
+
+        return orgPermissions.stream().
+            filter(permissions -> permissions.getOrganization().getMetadata().getGuid().toString().equals(orgGuid)).
+            findFirst().
+            isPresent();
     }
 
     private UploadCompleted processUpload(FileItemIterator iterator) throws IOException, FileUploadException {
