@@ -15,6 +15,11 @@
     <dependencies>
         <dependency>
             <groupId>org.trustedanalytics</groupId>
+            <artifactId>rest-error-handling</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.trustedanalytics</groupId>
             <artifactId>cf-client</artifactId>
         </dependency>
         <dependency>
@@ -172,9 +177,9 @@
         </plugins>
     </build>
     <properties>
-        <jacoco-measurement-instructions>0.285</jacoco-measurement-instructions>    <!-- Value <0.000, 1.000>, at least 3 places after coma -->
+        <jacoco-measurement-instructions>0.275</jacoco-measurement-instructions>    <!-- Value <0.000, 1.000>, at least 3 places after coma -->
         <jacoco-measurement-branches>0.241</jacoco-measurement-branches>            <!-- Value <0.000, 1.000>, at least 3 places after coma -->
-        <jacoco-measurement-lines>0.273</jacoco-measurement-lines>                  <!-- Value <0.000, 1.000>, at least 3 places after coma -->
+        <jacoco-measurement-lines>0.261</jacoco-measurement-lines>                  <!-- Value <0.000, 1.000>, at least 3 places after coma -->
         <jacoco-measurement-classes>0.428</jacoco-measurement-classes>              <!-- Value <0.000, 1.000>, at least 3 places after coma -->
     </properties>
 </project>
