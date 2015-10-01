@@ -8,9 +8,9 @@ applications:
   services:
     - sso
     - hdfs-instance
+    - kerberos-service
     - dataaquisitionservice
     - user-management
   env:
     SPRING_PROFILES_ACTIVE: "cloud,hdfs"
-    HDFS_USER: "cf"
     VERSION: ${version}
