@@ -23,7 +23,6 @@ import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
 import org.trustedanalytics.uploader.service.UploadService;
 import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
@@ -38,6 +37,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,8 +76,9 @@ public class UploadController {
     }
 
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
+    @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
-    public void upload(HttpServletRequest request, @PathVariable("orgGuid") String orgGuid) throws IOException, FileUploadException {
+    public UploadCompleted upload(HttpServletRequest request, @PathVariable("orgGuid") String orgGuid) throws IOException, FileUploadException {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -87,6 +88,7 @@ public class UploadController {
             upload.setProgressListener(new FileUploadListener());
             final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request));
             dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
+            return uploadCompleted;
         }
         else {
             throw new AccessDeniedException("You do not have access to requested organization.");
