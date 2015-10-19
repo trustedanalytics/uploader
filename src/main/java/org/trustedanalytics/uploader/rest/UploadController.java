@@ -18,11 +18,10 @@ package org.trustedanalytics.uploader.rest;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
-import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
+import org.trustedanalytics.uploader.security.PermissionVerifier;
 import org.trustedanalytics.uploader.service.UploadService;
-import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
@@ -43,7 +42,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
@@ -63,16 +61,16 @@ public class UploadController {
     private final UploadService uploadService;
     private final Function<Authentication, String> tokenExtractor;
     private final DataAcquisitionClient dataAcquisitionClient;
-    private final UserManagementClient userManagementClient;
+    private final PermissionVerifier permissionVerifier;
 
     @Autowired
     public UploadController(UploadService uploadService,
         Function<Authentication, String> tokenExtractor,
-        DataAcquisitionClient dataAcquisitionClient, UserManagementClient userManagementClient) {
+        DataAcquisitionClient dataAcquisitionClient, PermissionVerifier permissionVerifier) {
         this.uploadService = uploadService;
         this.tokenExtractor = tokenExtractor;
         this.dataAcquisitionClient = dataAcquisitionClient;
-        this.userManagementClient = userManagementClient;
+        this.permissionVerifier = permissionVerifier;
     }
 
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
@@ -82,27 +80,16 @@ public class UploadController {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(isOrgAccessible(orgGuid, auth)) {
+        if(permissionVerifier.isOrgAccessible(orgGuid, auth)) {
 
             final ServletFileUpload upload = new ServletFileUpload();
             upload.setProgressListener(new FileUploadListener());
             final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request));
             dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
             return uploadCompleted;
-        }
-        else {
+        } else {
             throw new AccessDeniedException("You do not have access to requested organization.");
         }
-    }
-
-    private boolean isOrgAccessible (String orgGuid, Authentication auth) {
-
-        List<CcOrgPermission> orgPermissions = userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth));
-
-        return orgPermissions.stream().
-            filter(permissions -> permissions.getOrganization().getMetadata().getGuid().toString().equals(orgGuid)).
-            findFirst().
-            isPresent();
     }
 
     private UploadCompleted processUpload(FileItemIterator iterator) throws IOException, FileUploadException {
@@ -114,7 +101,9 @@ public class UploadController {
             if(!stream.isFormField()) {
                 uploadService.upload(stream.openStream(), builder.setSource(stream.getName()));
             } else {
-                builder.setProperty(stream.getFieldName(), IOUtils.toString(stream.openStream(), "UTF-8"));
+                String fieldName = stream.getFieldName();
+                LOGGER.info("Field name: {}", fieldName);
+                builder.setProperty(fieldName, IOUtils.toString(stream.openStream(), "UTF-8"));
             }
         }
         LOGGER.info("Upload completed");
