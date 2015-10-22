@@ -118,7 +118,7 @@ public class UploadCompleted {
                     return setTitle(value);
                 case "category":
                     return setCategory(value);
-                case "public":
+                case "publicrequest":
                     return setPublicAccess(Boolean.valueOf(value));
                 case "orguuid":
                     return setOrgUUID(value);
