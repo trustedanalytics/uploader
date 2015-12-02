@@ -15,7 +15,6 @@
  */
 package org.trustedanalytics.uploader;
 
-import com.mangofactory.swagger.plugin.EnableSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.MultipartAutoConfiguration;
@@ -23,7 +22,6 @@ import org.springframework.cloud.security.oauth2.resource.EnableOAuth2Resource;
 
 @SpringBootApplication(exclude = {MultipartAutoConfiguration.class})
 @EnableOAuth2Resource
-@EnableSwagger
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
