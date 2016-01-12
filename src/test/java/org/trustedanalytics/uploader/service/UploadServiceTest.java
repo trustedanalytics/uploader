@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class UploadServiceTest {
@@ -47,10 +48,11 @@ public class UploadServiceTest {
         when(objectStore.getId()).thenReturn(OBJECT_STORE_ID);
 
         final UploadService service = new UploadService(Function.identity(),
-            new ObjectStoreStreamConsumer(objectStore));
+            new ObjectStoreStreamConsumer((x) -> objectStore));
 
         // when
-        service.upload(inputStream, builder);
+        UUID orgGuid = UUID.randomUUID();
+        service.upload(inputStream, builder, orgGuid);
 
         // then
         verify(objectStore).save(inputStream);

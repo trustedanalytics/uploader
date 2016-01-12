@@ -15,30 +15,28 @@
  */
 package org.trustedanalytics.uploader.core.stream.consumer;
 
+import com.google.common.base.Throwables;
 import org.trustedanalytics.store.ObjectStore;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
-
-import com.google.common.base.Throwables;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.function.BiConsumer;
+import java.util.UUID;
+import java.util.function.Function;
 
-@Component
-public class ObjectStoreStreamConsumer implements BiConsumer<InputStream, UploadCompletedBuilder> {
-    private final ObjectStore objectStore;
+public class ObjectStoreStreamConsumer
+    implements TriConsumer<InputStream, UploadCompletedBuilder, UUID> {
 
-    @Autowired
-    public ObjectStoreStreamConsumer(ObjectStore objectStore) {
-        this.objectStore = Objects.requireNonNull(objectStore);
+    private final Function<UUID, ObjectStore> objectStoreFactory;
+
+    public ObjectStoreStreamConsumer(Function<UUID, ObjectStore> objectStoreFactory) {
+        this.objectStoreFactory = Objects.requireNonNull(objectStoreFactory);
     }
 
     @Override
-    public void accept(InputStream inputStream, UploadCompletedBuilder builder) {
+    public void accept(InputStream inputStream, UploadCompletedBuilder builder, UUID orgUUID) {
+        ObjectStore objectStore = objectStoreFactory.apply(orgUUID);
         try {
             builder.setObjectStoreId(objectStore.getId());
             builder.setSavedObjectId(objectStore.save(inputStream));

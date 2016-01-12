@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
@@ -84,7 +85,7 @@ public class UploadController {
 
             final ServletFileUpload upload = new ServletFileUpload();
             upload.setProgressListener(new FileUploadListener());
-            final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request));
+            final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request), UUID.fromString(orgGuid));
             dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
             return uploadCompleted;
         } else {
@@ -92,14 +93,14 @@ public class UploadController {
         }
     }
 
-    private UploadCompleted processUpload(FileItemIterator iterator) throws IOException, FileUploadException {
+    private UploadCompleted processUpload(FileItemIterator iterator, UUID orgGuid) throws IOException, FileUploadException {
         final UploadCompletedBuilder builder = UploadCompleted.builder();
 
         LOGGER.info("Upload started");
         while(iterator.hasNext()) {
             final FileItemStream stream = iterator.next();
             if(!stream.isFormField()) {
-                uploadService.upload(stream.openStream(), builder.setSource(stream.getName()));
+                uploadService.upload(stream.openStream(), builder.setSource(stream.getName()), orgGuid);
             } else {
                 String fieldName = stream.getFieldName();
                 LOGGER.info("Field name: {}", fieldName);

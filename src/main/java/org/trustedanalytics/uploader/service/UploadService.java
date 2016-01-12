@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.uploader.service;
 
+import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.BiConsumer;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -30,18 +31,18 @@ public class UploadService {
 
     private final Function<InputStream, InputStream> streamDecoder;
 
-    private final BiConsumer<InputStream, UploadCompletedBuilder> streamConsumer;
+    private final TriConsumer<InputStream, UploadCompletedBuilder, UUID> streamConsumer;
 
     @Autowired
     public UploadService(Function<InputStream, InputStream> streamDecoder,
-        BiConsumer<InputStream, UploadCompletedBuilder> streamConsumer) {
+        TriConsumer<InputStream, UploadCompletedBuilder, UUID> streamConsumer) {
         this.streamDecoder = streamDecoder;
         this.streamConsumer = streamConsumer;
     }
 
-    public void upload(InputStream stream, UploadCompletedBuilder builder) {
+    public void upload(InputStream stream, UploadCompletedBuilder builder, UUID orgUUID) {
         try (InputStream input = streamDecoder.apply(stream)) {
-            streamConsumer.accept(input, builder);
+            streamConsumer.accept(input, builder, orgUUID);
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }

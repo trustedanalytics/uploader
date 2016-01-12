@@ -30,14 +30,15 @@ import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
 import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.client.OrgPermissionVerifier;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
+import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
 import org.trustedanalytics.uploader.rest.UploadCompleted;
 
 import java.io.InputStream;
-import java.util.function.BiConsumer;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Configuration
-@Profile("cloud")
+@Profile("multitenant-hdfs")
 public class UploaderConfigurationCloud {
 
     @Value("${services.dataacquisition.url}")
@@ -47,7 +48,7 @@ public class UploaderConfigurationCloud {
     private String userManagementUrl;
 
     @Bean
-    public BiConsumer<InputStream, UploadCompleted.UploadCompletedBuilder> streamConsumer(ObjectStore store) {
+    public TriConsumer<InputStream, UploadCompleted.UploadCompletedBuilder, UUID> streamConsumer(Function<UUID, ObjectStore> store) {
         return new ObjectStoreStreamConsumer(store);
     }
 
