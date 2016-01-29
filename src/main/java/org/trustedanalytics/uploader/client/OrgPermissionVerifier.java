@@ -21,6 +21,7 @@ import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 import org.trustedanalytics.uploader.security.PermissionVerifier;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class OrgPermissionVerifier implements PermissionVerifier {
@@ -35,12 +36,12 @@ public class OrgPermissionVerifier implements PermissionVerifier {
     }
 
     @Override
-    public boolean isOrgAccessible (String orgGuid, Authentication auth) {
+    public boolean isOrgAccessible (UUID orgGuid, Authentication auth) {
 
         List<CcOrgPermission> orgPermissions = userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth));
 
         return orgPermissions.stream().
-            filter(permissions -> permissions.getOrganization().getMetadata().getGuid().toString().equals(orgGuid)).
+            filter(permissions -> permissions.getOrganization().getMetadata().getGuid().equals(orgGuid)).
             findFirst().
             isPresent();
     }

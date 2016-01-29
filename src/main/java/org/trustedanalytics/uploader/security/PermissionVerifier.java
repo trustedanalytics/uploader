@@ -17,7 +17,9 @@ package org.trustedanalytics.uploader.security;
 
 import org.springframework.security.core.Authentication;
 
+import java.util.UUID;
+
 @FunctionalInterface
 public interface PermissionVerifier {
-    boolean isOrgAccessible (String orgGuid, Authentication auth);
+    boolean isOrgAccessible (UUID orgGuid, Authentication auth);
 }

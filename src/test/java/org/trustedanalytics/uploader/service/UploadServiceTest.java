@@ -15,11 +15,6 @@
  */
 package org.trustedanalytics.uploader.service;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
 import org.trustedanalytics.store.ObjectStore;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
@@ -30,6 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.function.Function;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class UploadServiceTest {
     private static final String OBJECT_STORE_ID = "object_store_id";
@@ -48,7 +48,7 @@ public class UploadServiceTest {
         when(objectStore.getId()).thenReturn(OBJECT_STORE_ID);
 
         final UploadService service = new UploadService(Function.identity(),
-            new ObjectStoreStreamConsumer((x) -> objectStore));
+                new ObjectStoreStreamConsumer((x) -> objectStore));
 
         // when
         UUID orgGuid = UUID.randomUUID();

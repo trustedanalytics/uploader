@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class FileUploadListener implements ProgressListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileUploadListener.class);
     private final Stopwatch stopwatch;
-    private final long interval = 5;
+    private static final long interval = 5;
 
     private long lastTimestamp = 0;
     private long lastTimestampBytes = 0;

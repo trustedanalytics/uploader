@@ -15,28 +15,30 @@
  */
 package org.trustedanalytics.uploader.core.stream.consumer;
 
-import com.google.common.base.Throwables;
 import org.trustedanalytics.store.ObjectStore;
+import org.trustedanalytics.store.ObjectStoreFactory;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
 
+import com.google.common.base.Throwables;
+
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 
-public class ObjectStoreStreamConsumer
-    implements TriConsumer<InputStream, UploadCompletedBuilder, UUID> {
+public class ObjectStoreStreamConsumer implements TriConsumer<InputStream, UploadCompletedBuilder, UUID> {
 
-    private final Function<UUID, ObjectStore> objectStoreFactory;
+    private final ObjectStoreFactory<UUID> objectStoreFactory;
 
-    public ObjectStoreStreamConsumer(Function<UUID, ObjectStore> objectStoreFactory) {
+    public ObjectStoreStreamConsumer(ObjectStoreFactory<UUID> objectStoreFactory) {
         this.objectStoreFactory = Objects.requireNonNull(objectStoreFactory);
     }
 
     @Override
-    public void accept(InputStream inputStream, UploadCompletedBuilder builder, UUID orgUUID) {
-        ObjectStore objectStore = objectStoreFactory.apply(orgUUID);
+    public void accept(InputStream inputStream, UploadCompletedBuilder builder, UUID orgUUID)
+            throws IOException, LoginException, InterruptedException {
+        ObjectStore objectStore = objectStoreFactory.create(orgUUID);
         try {
             builder.setObjectStoreId(objectStore.getId());
             builder.setSavedObjectId(objectStore.save(inputStream));

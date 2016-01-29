@@ -15,19 +15,20 @@
  */
 package org.trustedanalytics.uploader;
 
+import org.trustedanalytics.store.InFolderObjectStore;
+import org.trustedanalytics.store.ObjectStoreConfiguration;
+import org.trustedanalytics.uploader.client.DataAcquisitionClient;
+import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
+import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
+import org.trustedanalytics.uploader.rest.UploadCompleted;
+import org.trustedanalytics.uploader.security.PermissionVerifier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
-import org.trustedanalytics.store.InFolderObjectStore;
-import org.trustedanalytics.store.ObjectStoreConfiguration;
-import org.trustedanalytics.uploader.client.DataAcquisitionClient;
-import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
-import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
-import org.trustedanalytics.uploader.rest.UploadCompleted;
-import org.trustedanalytics.uploader.security.PermissionVerifier;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -42,8 +43,9 @@ public class UploaderConfigurationLocal {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploaderConfiguration.class);
 
     @Bean
-    public TriConsumer<InputStream, UploadCompleted.UploadCompletedBuilder, UUID> streamConsumer(InFolderObjectStore store) {
-        return new ObjectStoreStreamConsumer((x) -> store);
+    public TriConsumer<InputStream, UploadCompleted.UploadCompletedBuilder, UUID> streamConsumer(
+            InFolderObjectStore store) {
+        return new ObjectStoreStreamConsumer(x -> store);
     }
 
     @Bean

@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 public abstract class StreamDecoder implements Function<InputStream, InputStream> {
-    private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass().getSimpleName());
     private final Set<String> supportedMediaTypes;
     private final Detector detector;
 
@@ -62,7 +62,7 @@ public abstract class StreamDecoder implements Function<InputStream, InputStream
 
     private boolean isMediaTypeSupported(InputStream in) throws IOException {
         final MediaType mediaType = detector.detect(in, new Metadata());
-        logger.info("MediaType: {}", mediaType);
+        LOGGER.info("MediaType: {}", mediaType);
 
         return supportedMediaTypes.contains(mediaType.toString());
     }

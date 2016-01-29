@@ -12,5 +12,5 @@ applications:
     - dataaquisitionservice
     - user-management
   env:
-    SPRING_PROFILES_ACTIVE: "multitenant-hdfs"
+    SPRING_PROFILES_ACTIVE: "cloud,multitenant-hdfs"
     VERSION: ${version}

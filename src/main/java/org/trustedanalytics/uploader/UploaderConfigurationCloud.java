@@ -15,6 +15,15 @@
  */
 package org.trustedanalytics.uploader;
 
+import org.trustedanalytics.store.ObjectStoreFactory;
+import org.trustedanalytics.uploader.client.DataAcquisitionClient;
+import org.trustedanalytics.uploader.client.OrgPermissionVerifier;
+import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
+import org.trustedanalytics.uploader.client.UserManagementClient;
+import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
+import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
+import org.trustedanalytics.uploader.rest.UploadCompleted;
+
 import feign.Feign;
 import feign.Logger;
 import feign.jackson.JacksonDecoder;
@@ -24,21 +33,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
-import org.trustedanalytics.store.ObjectStore;
-import org.trustedanalytics.uploader.client.DataAcquisitionClient;
-import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
-import org.trustedanalytics.uploader.client.UserManagementClient;
-import org.trustedanalytics.uploader.client.OrgPermissionVerifier;
-import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
-import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
-import org.trustedanalytics.uploader.rest.UploadCompleted;
 
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.function.Function;
 
 @Configuration
-@Profile("multitenant-hdfs")
+@Profile("cloud")
 public class UploaderConfigurationCloud {
 
     @Value("${services.dataacquisition.url}")
@@ -48,14 +49,14 @@ public class UploaderConfigurationCloud {
     private String userManagementUrl;
 
     @Bean
-    public TriConsumer<InputStream, UploadCompleted.UploadCompletedBuilder, UUID> streamConsumer(Function<UUID, ObjectStore> store) {
+    public TriConsumer<InputStream, UploadCompleted.UploadCompletedBuilder, UUID> streamConsumer(
+            ObjectStoreFactory<UUID> store) {
         return new ObjectStoreStreamConsumer(store);
     }
 
     @Bean
-    public OrgPermissionVerifier orgPermissionVerifier(
-        UserManagementClient userManagementClient,
-        Function<Authentication, String> tokenExtractor) {
+    public OrgPermissionVerifier orgPermissionVerifier(UserManagementClient userManagementClient,
+            Function<Authentication, String> tokenExtractor) {
         return new OrgPermissionVerifier(userManagementClient, tokenExtractor);
     }
 
@@ -71,10 +72,10 @@ public class UploaderConfigurationCloud {
 
     private <T> T getClient(Class<T> clientType, String url) {
         return Feign.builder()
-            .encoder(new JacksonEncoder())
-            .decoder(new JacksonDecoder())
-            .logger(new ScramblingSlf4jLogger(clientType.getClass()))
-            .logLevel(Logger.Level.FULL)
-            .target(clientType, url);
+                .encoder(new JacksonEncoder())
+                .decoder(new JacksonDecoder())
+                .logger(new ScramblingSlf4jLogger(clientType.getClass()))
+                .logLevel(Logger.Level.FULL)
+                .target(clientType, url);
     }
 }

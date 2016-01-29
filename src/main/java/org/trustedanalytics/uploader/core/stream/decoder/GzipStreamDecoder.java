@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
 public class GzipStreamDecoder extends StreamDecoder {
-    private final static byte[] GZIP_MAGIC = {(byte) 0x1f, (byte) 0x08b};
+    private static final byte[] GZIP_MAGIC = {(byte) 0x1f, (byte) 0x08b};
 
     public GzipStreamDecoder() {
         super(new MagicDetector(MediaType.application("gzip"), GZIP_MAGIC), "application/gzip");

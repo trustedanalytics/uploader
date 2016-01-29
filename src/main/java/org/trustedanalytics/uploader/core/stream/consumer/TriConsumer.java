@@ -15,8 +15,11 @@
  */
 package org.trustedanalytics.uploader.core.stream.consumer;
 
+import javax.security.auth.login.LoginException;
+import java.io.IOException;
+
 @FunctionalInterface
 public interface TriConsumer<T, U, V> {
 
-    void accept(T t, U u, V v);
+    void accept(T t, U u, V v) throws IOException, LoginException, InterruptedException;
 }

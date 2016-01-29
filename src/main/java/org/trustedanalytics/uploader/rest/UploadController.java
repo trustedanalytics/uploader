@@ -15,13 +15,12 @@
  */
 package org.trustedanalytics.uploader.rest;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
 import org.trustedanalytics.uploader.security.PermissionVerifier;
 import org.trustedanalytics.uploader.service.UploadService;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
@@ -31,21 +30,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
 
-import javax.servlet.http.HttpServletRequest;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * By default spring and servlets use classic approach of downloading file to temporary
@@ -66,8 +66,8 @@ public class UploadController {
 
     @Autowired
     public UploadController(UploadService uploadService,
-        Function<Authentication, String> tokenExtractor,
-        DataAcquisitionClient dataAcquisitionClient, PermissionVerifier permissionVerifier) {
+            Function<Authentication, String> tokenExtractor,
+            DataAcquisitionClient dataAcquisitionClient, PermissionVerifier permissionVerifier) {
         this.uploadService = uploadService;
         this.tokenExtractor = tokenExtractor;
         this.dataAcquisitionClient = dataAcquisitionClient;
@@ -77,15 +77,16 @@ public class UploadController {
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
-    public UploadCompleted upload(HttpServletRequest request, @PathVariable("orgGuid") String orgGuid) throws IOException, FileUploadException {
+    public UploadCompleted upload(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
+            throws IOException, FileUploadException {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(permissionVerifier.isOrgAccessible(orgGuid, auth)) {
+        if (permissionVerifier.isOrgAccessible(orgGuid, auth)) {
 
             final ServletFileUpload upload = new ServletFileUpload();
             upload.setProgressListener(new FileUploadListener());
-            final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request), UUID.fromString(orgGuid));
+            final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request), orgGuid);
             dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
             return uploadCompleted;
         } else {
@@ -93,13 +94,14 @@ public class UploadController {
         }
     }
 
-    private UploadCompleted processUpload(FileItemIterator iterator, UUID orgGuid) throws IOException, FileUploadException {
+    private UploadCompleted processUpload(FileItemIterator iterator, UUID orgGuid)
+            throws IOException, FileUploadException {
         final UploadCompletedBuilder builder = UploadCompleted.builder();
 
         LOGGER.info("Upload started");
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             final FileItemStream stream = iterator.next();
-            if(!stream.isFormField()) {
+            if (!stream.isFormField()) {
                 uploadService.upload(stream.openStream(), builder.setSource(stream.getName()), orgGuid);
             } else {
                 String fieldName = stream.getFieldName();
