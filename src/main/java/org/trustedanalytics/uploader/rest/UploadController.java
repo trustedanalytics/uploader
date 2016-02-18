@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.uploader.rest;
 
+import io.swagger.annotations.ApiOperation;
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
@@ -74,6 +75,8 @@ public class UploadController {
         this.permissionVerifier = permissionVerifier;
     }
 
+
+    @ApiOperation("Uploads file")
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
