@@ -76,6 +76,7 @@ public class UploaderConfigurationCloud {
                 .decoder(new JacksonDecoder())
                 .logger(new ScramblingSlf4jLogger(clientType.getClass()))
                 .logLevel(Logger.Level.FULL)
+                .errorDecoder(new FeignErrorDecoder())
                 .target(clientType, url);
     }
 }

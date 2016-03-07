@@ -19,7 +19,9 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
+import org.trustedanalytics.uploader.FeignResponseException;
 import org.trustedanalytics.utils.errorhandling.ErrorFormatter;
+import org.trustedanalytics.utils.errorhandling.ErrorLogger;
 import org.trustedanalytics.utils.errorhandling.RestErrorHandler;
 
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
@@ -54,6 +56,11 @@ public class UploadExceptionHandler {
 
         LOGGER.warn(ErrorFormatter.formatErrorMessage("Access forbidden.", errorId));
         response.sendError(FORBIDDEN.value(), ErrorFormatter.formatErrorMessage("You do not have access to requested organization.", errorId));
+    }
+
+    @ExceptionHandler(FeignResponseException.class)
+    public void handleFeignException(FeignResponseException e, HttpServletResponse response) throws IOException {
+        ErrorLogger.logAndSendErrorResponse(LOGGER, response, e.getStatusCode(), e.getMessage(), e);
     }
 
     @ExceptionHandler(Exception.class)
