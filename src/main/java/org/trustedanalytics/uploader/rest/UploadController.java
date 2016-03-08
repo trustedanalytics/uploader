@@ -15,7 +15,8 @@
  */
 package org.trustedanalytics.uploader.rest;
 
-import io.swagger.annotations.ApiOperation;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
@@ -41,12 +42,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import javax.servlet.http.HttpServletRequest;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * By default spring and servlets use classic approach of downloading file to temporary
@@ -76,7 +80,13 @@ public class UploadController {
     }
 
 
-    @ApiOperation("Uploads file")
+    @ApiOperation("Uploads file as multipart content together with metadata")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "The request has succeeded", response = UploadCompleted.class),
+        @ApiResponse(code = 400, message = "The request could not be understood by the server due to malformed syntax"),
+        @ApiResponse(code = 403, message = "User is not permitted to perform the requested operation"),
+        @ApiResponse(code = 500, message = "Service encountered an unexpected condition which prevented it from fulfilling the request")
+    })
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
@@ -86,7 +96,6 @@ public class UploadController {
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (permissionVerifier.isOrgAccessible(orgGuid, auth)) {
-
             final ServletFileUpload upload = new ServletFileUpload();
             upload.setProgressListener(new FileUploadListener());
             final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request), orgGuid);

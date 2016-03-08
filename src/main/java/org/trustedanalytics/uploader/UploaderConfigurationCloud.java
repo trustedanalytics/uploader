@@ -17,7 +17,8 @@ package org.trustedanalytics.uploader;
 
 import org.trustedanalytics.store.ObjectStoreFactory;
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
-import org.trustedanalytics.uploader.client.OrgPermissionVerifier;
+import org.trustedanalytics.uploader.rest.FeignErrorDecoder;
+import org.trustedanalytics.uploader.security.OrgPermissionVerifier;
 import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
 import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;

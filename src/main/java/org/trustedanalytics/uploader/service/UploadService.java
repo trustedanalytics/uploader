@@ -18,14 +18,17 @@ package org.trustedanalytics.uploader.service;
 import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
 import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
 
+import org.apache.hadoop.security.AccessControlException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.function.Function;
+
+import javax.security.auth.login.LoginException;
 
 @Service
 public class UploadService {
@@ -44,6 +47,8 @@ public class UploadService {
     public void upload(InputStream stream, UploadCompletedBuilder builder, UUID orgUUID) {
         try (InputStream input = streamDecoder.apply(stream)) {
             streamConsumer.accept(input, builder, orgUUID);
+        } catch (AccessControlException ex) {
+            throw new AccessDeniedException("Permission denied", ex);
         } catch (IOException | LoginException | InterruptedException ex) {
             throw new IllegalStateException(ex);
         }

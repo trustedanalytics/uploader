@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.uploader.client;
+package org.trustedanalytics.uploader.security;
+
+import org.trustedanalytics.uploader.client.UserManagementClient;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
-import org.trustedanalytics.uploader.security.PermissionVerifier;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -30,19 +29,19 @@ public class OrgPermissionVerifier implements PermissionVerifier {
     private final Function<Authentication, String> tokenExtractor;
 
     @Autowired
-    public OrgPermissionVerifier(UserManagementClient userManagementClient, Function<Authentication, String> tokenExtractor) {
+    public OrgPermissionVerifier(UserManagementClient userManagementClient,
+        Function<Authentication, String> tokenExtractor) {
         this.userManagementClient = userManagementClient;
         this.tokenExtractor = tokenExtractor;
     }
 
     @Override
-    public boolean isOrgAccessible (UUID orgGuid, Authentication auth) {
-
-        List<CcOrgPermission> orgPermissions = userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth));
-
-        return orgPermissions.stream().
-            filter(permissions -> permissions.getOrganization().getMetadata().getGuid().equals(orgGuid)).
-            findFirst().
-            isPresent();
+    public boolean isOrgAccessible(UUID orgGuid, Authentication auth) {
+        return userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth))
+            .stream()
+            .map(ccOrgPermission -> ccOrgPermission.getOrganization().getMetadata().getGuid())
+            .filter(orgGuid::equals)
+            .findFirst()
+            .isPresent();
     }
 }
