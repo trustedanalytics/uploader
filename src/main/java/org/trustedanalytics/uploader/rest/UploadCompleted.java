@@ -42,12 +42,12 @@ public class UploadCompleted {
     private final String savedObjectId;
 
     private UploadCompleted(UploadCompletedBuilder uploadCompletedBuilder) {
-        this.source = Objects.requireNonNull(uploadCompletedBuilder.source);
-        this.orgUUID = Objects.requireNonNull(uploadCompletedBuilder.orgUUID);
-        this.title = Objects.requireNonNull(uploadCompletedBuilder.title);
-        this.category = Objects.requireNonNull(uploadCompletedBuilder.category);
-        this.objectStoreId = Objects.requireNonNull(uploadCompletedBuilder.objectStoreId);
-        this.savedObjectId = Objects.requireNonNull(uploadCompletedBuilder.savedObjectId);
+        this.source = Objects.requireNonNull(uploadCompletedBuilder.source, "source is required");
+        this.orgUUID = Objects.requireNonNull(uploadCompletedBuilder.orgUUID, "organization guid is required");
+        this.title = Objects.requireNonNull(uploadCompletedBuilder.title, "title is required");
+        this.category = Objects.requireNonNull(uploadCompletedBuilder.category, "category is required");
+        this.objectStoreId = Objects.requireNonNull(uploadCompletedBuilder.objectStoreId, "object store id is required");
+        this.savedObjectId = Objects.requireNonNull(uploadCompletedBuilder.savedObjectId, "saved object id is required");
         this.publicAccess = uploadCompletedBuilder.publicAccess;
     }
 
@@ -72,8 +72,8 @@ public class UploadCompleted {
         private String source;
         private String orgUUID;
         private String title;
-        private String category;
-        private boolean publicAccess;
+        private String category = "other";
+        private boolean publicAccess = false;
         private String objectStoreId;
         private String savedObjectId;
 
