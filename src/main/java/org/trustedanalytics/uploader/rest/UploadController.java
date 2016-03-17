@@ -80,9 +80,12 @@ public class UploadController {
     }
 
 
-    @ApiOperation("Uploads file as multipart content together with metadata")
+    @ApiOperation(
+            value = "Uploads file as multipart content together with metadata.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization."
+    )
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "The request has succeeded", response = UploadCompleted.class),
+        @ApiResponse(code = 201, message = "The request has succeeded", response = UploadCompleted.class),
         @ApiResponse(code = 400, message = "The request could not be understood by the server due to malformed syntax"),
         @ApiResponse(code = 403, message = "User is not permitted to perform the requested operation"),
         @ApiResponse(code = 500, message = "Service encountered an unexpected condition which prevented it from fulfilling the request")
