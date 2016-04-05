@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import org.trustedanalytics.store.ObjectStore;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
-import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
+import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
 
 import org.junit.Test;
 
@@ -38,7 +38,7 @@ public class UploadServiceTest {
     @Test
     public void testUpload() throws IOException {
         // given
-        final UploadCompletedBuilder builder = mock(UploadCompletedBuilder.class);
+        final UploadResponseBuilder builder = mock(UploadResponseBuilder.class);
         when(builder.setObjectStoreId(OBJECT_STORE_ID)).thenReturn(builder);
         when(builder.setSavedObjectId(SAVED_OBJECT_ID)).thenReturn(builder);
 

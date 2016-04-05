@@ -15,49 +15,66 @@
  */
 package org.trustedanalytics.uploader.core.listener;
 
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+
 import com.google.common.base.Stopwatch;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.http.fileupload.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FileUploadListener implements ProgressListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileUploadListener.class);
-    private final Stopwatch stopwatch;
-    private static final long interval = 5;
 
-    private long lastTimestamp = 0;
-    private long lastTimestampBytes = 0;
+    private final long interval;
+    private final TimeUnit intervalTimeUnit;
+
+    private final Stopwatch stopwatch;
+    private final AtomicReference<String> filename;
+
+    private long lastSnapshotSize;
+    private long lastSnapshotTime;
 
     public FileUploadListener() {
-        this(Stopwatch.createUnstarted());
+        this(5, TimeUnit.SECONDS, Stopwatch.createUnstarted());
     }
 
-    public FileUploadListener(Stopwatch stopwatch) {
+    public FileUploadListener(long interval, TimeUnit intervalTimeUnit) {
+        this(interval, intervalTimeUnit, Stopwatch.createUnstarted());
+    }
+
+    public FileUploadListener(long interval, TimeUnit intervalTimeUnit, Stopwatch stopwatch) {
+        this.interval = interval;
+        this.intervalTimeUnit = intervalTimeUnit;
+        this.lastSnapshotSize = 0;
+        this.lastSnapshotTime = 0;
         this.stopwatch = stopwatch.reset().start();
+        this.filename = new AtomicReference<>();
+    }
+
+    public void setFilename(String filename) {
+        this.filename.set(filename);
     }
 
     @Override
     public void update(long pBytesRead, long pContentLength, int pItems) {
-        long timestamp = stopwatch.elapsed(TimeUnit.SECONDS);
-        if ((timestamp != lastTimestamp) && (timestamp % interval == 0)) {
-            log(pBytesRead, pContentLength);
-            lastTimestampBytes = pBytesRead;
-            lastTimestamp = timestamp;
+        long snapshotTime = stopwatch.elapsed(intervalTimeUnit);
+        if(snapshotTime >= (lastSnapshotTime + interval)) {
+            snapshotProgress(pBytesRead, pContentLength, snapshotTime - lastSnapshotTime);
+            lastSnapshotSize = pBytesRead;
+            lastSnapshotTime = snapshotTime;
         }
     }
 
-    private void log(long pBytesRead, long pContentLength) {
-        final String speed = FileUtils.byteCountToDisplaySize((pBytesRead - lastTimestampBytes) / interval);
-        final String uploaded = FileUtils.byteCountToDisplaySize(pBytesRead);
-        if (pContentLength != -1) {
-            String progress = String.valueOf(pBytesRead * 100 / pContentLength);
-            LOGGER.info("Uploaded: {}, Speed: {}/s, Progress: {}%", uploaded, speed, progress);
-        } else {
-            LOGGER.info("Uploaded: {}, Speed: {}/s", uploaded, speed);
-        }
+    private void snapshotProgress(long pBytesRead, long pContentLength, long window) {
+        String speed = byteCountToDisplaySize((pBytesRead - lastSnapshotSize) / window);
+        String uploaded = byteCountToDisplaySize(pBytesRead);
+        String progress = (pContentLength != -1) ? String.valueOf(pBytesRead * 100 / pContentLength) : "--";
+        LOGGER.info("File: {}, Uploaded: {}, Speed: {}/s, Progress: {}%",
+            Optional.ofNullable(filename.get()).orElse("--"), uploaded, speed, progress);
     }
 }

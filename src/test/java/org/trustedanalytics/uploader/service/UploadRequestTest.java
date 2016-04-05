@@ -16,10 +16,11 @@
 package org.trustedanalytics.uploader.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 
-import org.trustedanalytics.uploader.rest.UploadCompleted;
-import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
+import org.trustedanalytics.uploader.rest.UploadResponse;
+import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
 
 import org.hamcrest.Matcher;
 import org.junit.Test;
@@ -37,7 +38,7 @@ public class UploadRequestTest {
         // @formatter:off
         return Arrays.asList(
             new Object[][] {
-                {"test without category specified", UploadCompleted.builder()
+                {"test without category specified", UploadResponse.builder()
                     .setOrgUUID(UUID.randomUUID().toString())
                     .setPublicAccess(true)
                     .setSource("source")
@@ -45,7 +46,7 @@ public class UploadRequestTest {
                     .setObjectStoreId("objectStoreId")
                     .setSavedObjectId("savedObjectId"), containsString("other")},
 
-                {"test with category specified", UploadCompleted.builder()
+                {"test with category specified", UploadResponse.builder()
                     .setOrgUUID(UUID.randomUUID().toString())
                     .setCategory("finance")
                     .setPublicAccess(true)
@@ -54,7 +55,7 @@ public class UploadRequestTest {
                     .setObjectStoreId("objectStoreId")
                     .setSavedObjectId("savedObjectId"), containsString("finance")},
 
-                {"test without public access specified", UploadCompleted.builder()
+                {"test without public access specified", UploadResponse.builder()
                     .setOrgUUID(UUID.randomUUID().toString())
                     .setCategory("finance")
                     .setSource("source")
@@ -62,14 +63,25 @@ public class UploadRequestTest {
                     .setObjectStoreId("objectStoreId")
                     .setSavedObjectId("savedObjectId"), containsString("false")},
 
-                {"test with public access specified", UploadCompleted.builder()
+                {"test with public access specified", UploadResponse.builder()
                     .setOrgUUID(UUID.randomUUID().toString())
                     .setPublicAccess(true)
                     .setCategory("finance")
                     .setSource("source")
                     .setTitle("title")
                     .setObjectStoreId("objectStoreId")
-                    .setSavedObjectId("savedObjectId"), containsString("true")}
+                    .setSavedObjectId("savedObjectId"), containsString("true")},
+                {"test with form fields", UploadResponse.builder()
+                    .setSource("source")
+                    .setProperty("orguuid", UUID.randomUUID().toString())
+                    .setProperty("publicRequest", "true")
+                    .setProperty("category", "finance")
+                    .setProperty("title", "title")
+                    .setObjectStoreId("objectStoreId")
+                    .setSavedObjectId("savedObjectId"), allOf(containsString("title"),
+                                                              containsString("true"),
+                                                              containsString("finance"))
+                }
             });
         // @formatter:on
     }
@@ -78,7 +90,7 @@ public class UploadRequestTest {
     public String testName;
 
     @Parameterized.Parameter(1)
-    public UploadCompletedBuilder builder;
+    public UploadResponseBuilder builder;
 
     @Parameterized.Parameter(2)
     public Matcher<String> matcher;

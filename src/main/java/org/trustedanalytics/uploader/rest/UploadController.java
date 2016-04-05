@@ -19,20 +19,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
-import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
+import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
 import org.trustedanalytics.uploader.security.PermissionVerifier;
 import org.trustedanalytics.uploader.service.UploadService;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,16 +65,16 @@ public class UploadController {
 
     private final UploadService uploadService;
     private final Function<Authentication, String> tokenExtractor;
-    private final DataAcquisitionClient dataAcquisitionClient;
+    private final DataAcquisitionClient dasClient;
     private final PermissionVerifier permissionVerifier;
 
     @Autowired
     public UploadController(UploadService uploadService,
-            Function<Authentication, String> tokenExtractor,
-            DataAcquisitionClient dataAcquisitionClient, PermissionVerifier permissionVerifier) {
+            Function<Authentication, String> tokenExtractor, DataAcquisitionClient dasClient,
+        PermissionVerifier permissionVerifier) {
         this.uploadService = uploadService;
         this.tokenExtractor = tokenExtractor;
-        this.dataAcquisitionClient = dataAcquisitionClient;
+        this.dasClient = dasClient;
         this.permissionVerifier = permissionVerifier;
     }
 
@@ -85,7 +84,7 @@ public class UploadController {
             notes = "Privilege level: Consumer of this endpoint must be a member of specified organization."
     )
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "The request has succeeded", response = UploadCompleted.class),
+        @ApiResponse(code = 201, message = "The request has succeeded", response = UploadResponse.class),
         @ApiResponse(code = 400, message = "The request could not be understood by the server due to malformed syntax"),
         @ApiResponse(code = 403, message = "User is not permitted to perform the requested operation"),
         @ApiResponse(code = 500, message = "Service encountered an unexpected condition which prevented it from fulfilling the request")
@@ -93,39 +92,55 @@ public class UploadController {
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
-    public UploadCompleted upload(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
+    public UploadResponse upload(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
             throws IOException, FileUploadException {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (permissionVerifier.isOrgAccessible(orgGuid, auth)) {
-            final ServletFileUpload upload = new ServletFileUpload();
-            upload.setProgressListener(new FileUploadListener());
-            final UploadCompleted uploadCompleted = processUpload(upload.getItemIterator(request), orgGuid);
-            dataAcquisitionClient.uploadCompleted(uploadCompleted, "bearer " + tokenExtractor.apply(auth));
-            return uploadCompleted;
-        } else {
-            throw new AccessDeniedException("You do not have access to requested organization.");
-        }
+        permissionVerifier.checkOrganizationAccess(orgGuid, auth);
+
+        final ServletFileUpload upload = new ServletFileUpload();
+        final FileUploadListener listener = new FileUploadListener();
+        upload.setProgressListener(listener);
+
+        final UploadRequest uploadRequest = new UploadRequest(orgGuid, listener);
+        final UploadResponse uploadResponse = processUpload(upload.getItemIterator(request), uploadRequest);
+        dasClient.uploadCompleted(uploadResponse, "bearer " + tokenExtractor.apply(auth));
+
+        return uploadResponse;
     }
 
-    private UploadCompleted processUpload(FileItemIterator iterator, UUID orgGuid)
+    private UploadResponse processUpload(FileItemIterator iterator, UploadRequest request)
             throws IOException, FileUploadException {
-        final UploadCompletedBuilder builder = UploadCompleted.builder();
+        final UploadResponseBuilder uploadResponseBuilder = UploadResponse.builder();
 
         LOGGER.info("Upload started");
         while (iterator.hasNext()) {
-            final FileItemStream stream = iterator.next();
+            FileItemStream stream = iterator.next();
             if (!stream.isFormField()) {
-                uploadService.upload(stream.openStream(), builder.setSource(stream.getName()), orgGuid);
+                processFile(stream, request, uploadResponseBuilder);
             } else {
-                String fieldName = stream.getFieldName();
-                LOGGER.info("Field name: {}", fieldName);
-                builder.setProperty(fieldName, IOUtils.toString(stream.openStream(), "UTF-8"));
+                processFormFiled(stream, uploadResponseBuilder);
             }
         }
         LOGGER.info("Upload completed");
 
-        return builder.build();
+        return uploadResponseBuilder.build();
+    }
+
+    private void processFile(FileItemStream stream, UploadRequest request, UploadResponseBuilder responseBuilder)
+        throws IOException {
+        final String fileName = stream.getName();
+        LOGGER.info("file: {}", fileName);
+        request.getListener().setFilename(fileName);
+        uploadService.upload(stream.openStream(), responseBuilder.setSource(fileName), request.getOrg());
+    }
+
+    private void processFormFiled(FileItemStream stream, UploadResponseBuilder responseBuilder)
+        throws IOException {
+        final String fieldName = stream.getFieldName();
+        final String fieldValue = Streams.asString(stream.openStream());
+        LOGGER.info("{} : {}", fieldName, fieldValue);
+        responseBuilder.setProperty(fieldName, fieldValue);
     }
 }

@@ -16,7 +16,7 @@
 package org.trustedanalytics.uploader.service;
 
 import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
-import org.trustedanalytics.uploader.rest.UploadCompleted.UploadCompletedBuilder;
+import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
 
 import org.apache.hadoop.security.AccessControlException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,16 +35,16 @@ public class UploadService {
 
     private final Function<InputStream, InputStream> streamDecoder;
 
-    private final TriConsumer<InputStream, UploadCompletedBuilder, UUID> streamConsumer;
+    private final TriConsumer<InputStream, UploadResponseBuilder, UUID> streamConsumer;
 
     @Autowired
     public UploadService(Function<InputStream, InputStream> streamDecoder,
-            TriConsumer<InputStream, UploadCompletedBuilder, UUID> streamConsumer) {
+            TriConsumer<InputStream, UploadResponseBuilder, UUID> streamConsumer) {
         this.streamDecoder = streamDecoder;
         this.streamConsumer = streamConsumer;
     }
 
-    public void upload(InputStream stream, UploadCompletedBuilder builder, UUID orgUUID) {
+    public void upload(InputStream stream, UploadResponseBuilder builder, UUID orgUUID) {
         try (InputStream input = streamDecoder.apply(stream)) {
             streamConsumer.accept(input, builder, orgUUID);
         } catch (AccessControlException ex) {

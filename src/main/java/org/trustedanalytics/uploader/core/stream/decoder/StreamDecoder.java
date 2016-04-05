@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 public abstract class StreamDecoder implements Function<InputStream, InputStream> {
-    private final Logger LOGGER = LoggerFactory.getLogger(getClass().getSimpleName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(StreamDecoder.class.getName());
     private final Set<String> supportedMediaTypes;
     private final Detector detector;
 

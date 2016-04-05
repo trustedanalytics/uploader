@@ -17,18 +17,19 @@ package org.trustedanalytics.uploader;
 
 import org.trustedanalytics.store.ObjectStoreFactory;
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
-import org.trustedanalytics.uploader.rest.FeignErrorDecoder;
-import org.trustedanalytics.uploader.security.OrgPermissionVerifier;
 import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
 import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
 import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
-import org.trustedanalytics.uploader.rest.UploadCompleted;
+import org.trustedanalytics.uploader.rest.FeignErrorDecoder;
+import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
+import org.trustedanalytics.uploader.security.OrgPermissionVerifier;
 
 import feign.Feign;
 import feign.Logger;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,7 +51,7 @@ public class UploaderConfigurationCloud {
     private String userManagementUrl;
 
     @Bean
-    public TriConsumer<InputStream, UploadCompleted.UploadCompletedBuilder, UUID> streamConsumer(
+    public TriConsumer<InputStream, UploadResponseBuilder, UUID> streamConsumer(
             ObjectStoreFactory<UUID> store) {
         return new ObjectStoreStreamConsumer(store);
     }

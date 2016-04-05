@@ -18,6 +18,7 @@ package org.trustedanalytics.uploader.security;
 import org.trustedanalytics.uploader.client.UserManagementClient;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
 import java.util.UUID;
@@ -25,6 +26,7 @@ import java.util.function.Function;
 
 public class OrgPermissionVerifier implements PermissionVerifier {
 
+    static final String ACCESS_DENIED_MSG = "You do not have access to requested organization.";
     private final UserManagementClient userManagementClient;
     private final Function<Authentication, String> tokenExtractor;
 
@@ -36,12 +38,12 @@ public class OrgPermissionVerifier implements PermissionVerifier {
     }
 
     @Override
-    public boolean isOrgAccessible(UUID orgGuid, Authentication auth) {
-        return userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth))
+    public void checkOrganizationAccess(UUID org, Authentication auth) {
+        userManagementClient.getPermissions("bearer " + tokenExtractor.apply(auth))
             .stream()
             .map(ccOrgPermission -> ccOrgPermission.getOrganization().getMetadata().getGuid())
-            .filter(orgGuid::equals)
+            .filter(org::equals)
             .findFirst()
-            .isPresent();
+            .orElseThrow(() -> new AccessDeniedException(ACCESS_DENIED_MSG));
     }
 }

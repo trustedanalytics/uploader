@@ -15,7 +15,7 @@
  */
 package org.trustedanalytics.uploader.client;
 
-import org.trustedanalytics.uploader.rest.UploadCompleted;
+import org.trustedanalytics.uploader.rest.UploadResponse;
 
 import feign.Headers;
 import feign.Param;
@@ -25,6 +25,6 @@ public interface DataAcquisitionClient {
 
     @RequestLine("POST /rest/das/callbacks/uploader")
     @Headers({"Authorization: {token}", "Content-Type: application/json"})
-    void uploadCompleted(UploadCompleted message, @Param("token") String token);
+    void uploadCompleted(UploadResponse message, @Param("token") String token);
 
 }

@@ -13,13 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.trustedanalytics.uploader.security;
+package org.trustedanalytics.uploader.rest;
 
-import org.springframework.security.core.Authentication;
+import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 
+import java.util.Objects;
 import java.util.UUID;
 
-@FunctionalInterface
-public interface PermissionVerifier {
-    void checkOrganizationAccess(UUID org, Authentication auth);
+import lombok.Data;
+
+@Data
+public class UploadRequest {
+
+    private UUID org;
+    private FileUploadListener listener;
+
+    public UploadRequest(UUID org, FileUploadListener listener) {
+        this.org = Objects.requireNonNull(org);
+        this.listener = Objects.requireNonNull(listener);
+    }
 }

@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>uploader</artifactId>
-    <version>0.5.12</version>
+    <version>0.5.13</version>
 
     <parent>
         <groupId>org.trustedanalytics</groupId>
@@ -156,7 +156,7 @@
     </build>
     <properties>
         <jacoco-measurement-instructions>0.238</jacoco-measurement-instructions>    <!-- Value <0.000, 1.000>, at least 3 places after coma -->
-        <jacoco-measurement-branches>0.241</jacoco-measurement-branches>            <!-- Value <0.000, 1.000>, at least 3 places after coma -->
+        <jacoco-measurement-branches>0.189</jacoco-measurement-branches>            <!-- Value <0.000, 1.000>, at least 3 places after coma -->
         <jacoco-measurement-lines>0.224</jacoco-measurement-lines>                  <!-- Value <0.000, 1.000>, at least 3 places after coma -->
         <jacoco-measurement-classes>0.300</jacoco-measurement-classes>              <!-- Value <0.000, 1.000>, at least 3 places after coma -->
     </properties>

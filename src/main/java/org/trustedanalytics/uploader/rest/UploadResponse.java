@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-public class UploadCompleted {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UploadCompleted.class);
+public class UploadResponse {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadResponse.class);
 
     @JsonProperty("source")
     private final String source;
@@ -41,14 +41,14 @@ public class UploadCompleted {
     @JsonProperty("idInObjectStore")
     private final String savedObjectId;
 
-    private UploadCompleted(UploadCompletedBuilder uploadCompletedBuilder) {
-        this.source = Objects.requireNonNull(uploadCompletedBuilder.source, "source is required");
-        this.orgUUID = Objects.requireNonNull(uploadCompletedBuilder.orgUUID, "organization guid is required");
-        this.title = Objects.requireNonNull(uploadCompletedBuilder.title, "title is required");
-        this.category = Objects.requireNonNull(uploadCompletedBuilder.category, "category is required");
-        this.objectStoreId = Objects.requireNonNull(uploadCompletedBuilder.objectStoreId, "object store id is required");
-        this.savedObjectId = Objects.requireNonNull(uploadCompletedBuilder.savedObjectId, "saved object id is required");
-        this.publicAccess = uploadCompletedBuilder.publicAccess;
+    private UploadResponse(UploadResponseBuilder builder) {
+        this.source = Objects.requireNonNull(builder.source, "source is required");
+        this.orgUUID = Objects.requireNonNull(builder.orgUUID, "organization guid is required");
+        this.title = Objects.requireNonNull(builder.title, "title is required");
+        this.category = Objects.requireNonNull(builder.category, "category is required");
+        this.objectStoreId = Objects.requireNonNull(builder.objectStoreId, "object store id is required");
+        this.savedObjectId = Objects.requireNonNull(builder.savedObjectId, "saved object id is required");
+        this.publicAccess = builder.publicAccess;
     }
 
     @Override
@@ -64,11 +64,11 @@ public class UploadCompleted {
             .toString();
     }
 
-    public static UploadCompletedBuilder builder() {
-        return new UploadCompletedBuilder();
+    public static UploadResponseBuilder builder() {
+        return new UploadResponseBuilder();
     }
 
-    public static class UploadCompletedBuilder {
+    public static class UploadResponseBuilder {
         private String source;
         private String orgUUID;
         private String title;
@@ -77,42 +77,42 @@ public class UploadCompleted {
         private String objectStoreId;
         private String savedObjectId;
 
-        public UploadCompletedBuilder setSource(String name) {
+        public UploadResponseBuilder setSource(String name) {
             this.source = name;
             return this;
         }
 
-        public UploadCompletedBuilder setOrgUUID(String orgUUID) {
+        public UploadResponseBuilder setOrgUUID(String orgUUID) {
             this.orgUUID = orgUUID;
             return this;
         }
 
-        public UploadCompletedBuilder setTitle(String title) {
+        public UploadResponseBuilder setTitle(String title) {
             this.title = title;
             return this;
         }
 
-        public UploadCompletedBuilder setCategory(String category) {
+        public UploadResponseBuilder setCategory(String category) {
             this.category = category;
             return this;
         }
 
-        public UploadCompletedBuilder setPublicAccess(boolean publicAccess) {
+        public UploadResponseBuilder setPublicAccess(boolean publicAccess) {
             this.publicAccess = publicAccess;
             return this;
         }
 
-        public UploadCompletedBuilder setObjectStoreId(String objectStoreId) {
+        public UploadResponseBuilder setObjectStoreId(String objectStoreId) {
             this.objectStoreId = objectStoreId;
             return this;
         }
 
-        public UploadCompletedBuilder setSavedObjectId(String savedObjectId) {
+        public UploadResponseBuilder setSavedObjectId(String savedObjectId) {
             this.savedObjectId = savedObjectId;
             return this;
         }
 
-        public UploadCompletedBuilder setProperty(String key, String value) {
+        public UploadResponseBuilder setProperty(String key, String value) {
             switch (key.toLowerCase()) {
                 case "title":
                     return setTitle(value);
@@ -128,8 +128,8 @@ public class UploadCompleted {
             }
         }
 
-        public UploadCompleted build() {
-            return new UploadCompleted(this);
+        public UploadResponse build() {
+            return new UploadResponse(this);
         }
     }
 }
