@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/trustedanalytics/uploader.svg?branch=master)](https://travis-ci.org/trustedanalytics/uploader)
+[![Dependency Status](https://www.versioneye.com/user/projects/5729c2a7a0ca35005083fc0f/badge.svg?style=flat)](https://www.versioneye.com/user/projects/5729c2a7a0ca35005083fc0f)
+
 # uploader
 Service for uploading data
 
