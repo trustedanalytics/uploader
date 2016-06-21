@@ -1,0 +1,16 @@
+#!/bin/bash
+
+dir_files=(*.*)
+echo "Please provide name of the organization"
+read org
+
+files=""
+for ((i=0;i<${#dir_files[@]} ;i++)); do
+    files+="-F upload=@${dir_files[i]} "
+done
+
+if [ "$1" != "" ]; then
+	curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data $files http://hdfs-uploader.$1/rest/v1/files/`cf org $org --guid` | jq .;
+else 
+	curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data $files http://localhost:8080/rest/v1/files/`cf org $org --guid` | jq .;
+fi

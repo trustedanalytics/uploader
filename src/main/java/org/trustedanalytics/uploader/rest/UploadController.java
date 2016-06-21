@@ -19,15 +19,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
-import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
 import org.trustedanalytics.uploader.security.PermissionVerifier;
 import org.trustedanalytics.uploader.service.UploadService;
 
-import org.apache.tomcat.util.http.fileupload.FileItemIterator;
-import org.apache.tomcat.util.http.fileupload.FileItemStream;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
-import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +38,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -70,8 +67,8 @@ public class UploadController {
 
     @Autowired
     public UploadController(UploadService uploadService,
-            Function<Authentication, String> tokenExtractor, DataAcquisitionClient dasClient,
-        PermissionVerifier permissionVerifier) {
+                            Function<Authentication, String> tokenExtractor, DataAcquisitionClient dasClient,
+                            PermissionVerifier permissionVerifier) {
         this.uploadService = uploadService;
         this.tokenExtractor = tokenExtractor;
         this.dasClient = dasClient;
@@ -84,63 +81,55 @@ public class UploadController {
             notes = "Privilege level: Consumer of this endpoint must be a member of specified organization."
     )
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "The request has succeeded", response = UploadResponse.class),
-        @ApiResponse(code = 400, message = "The request could not be understood by the server due to malformed syntax"),
-        @ApiResponse(code = 403, message = "User is not permitted to perform the requested operation"),
-        @ApiResponse(code = 500, message = "Service encountered an unexpected condition which prevented it from fulfilling the request")
+            @ApiResponse(code = 201, message = "The request has succeeded", response = Transfer.class),
+            @ApiResponse(code = 400, message = "The request could not be understood by the server due to malformed syntax"),
+            @ApiResponse(code = 403, message = "User is not permitted to perform the requested operation"),
+            @ApiResponse(code = 500, message = "Service encountered an unexpected condition which prevented it from fulfilling the request")
     })
     @RequestMapping(value = "/rest/upload/{orgGuid}", method = RequestMethod.POST)
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
-    public UploadResponse upload(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
-            throws IOException, FileUploadException {
+    public Transfer uploadFile(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
+            throws IOException, FileUploadException, UploadException {
+
+        final ServletFileUpload upload = new ServletFileUpload();
+        final UploadRequest uploadRequest = getUploadRequest(request, orgGuid, upload);
+        return uploadService.processUpload(upload.getItemIterator(request), uploadRequest, false).get(0);
+    }
+
+
+    @ApiOperation(
+            value = "Uploads multiple files as multipart content together with metadata.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "The request has succeeded", response = Collection.class),
+            @ApiResponse(code = 400, message = "The request could not be understood by the server due to malformed syntax"),
+            @ApiResponse(code = 403, message = "User is not permitted to perform the requested operation"),
+            @ApiResponse(code = 500, message = "Service encountered an unexpected condition which prevented it from fulfilling the request")
+    })
+    @RequestMapping(value = "/rest/v1/files/{orgGuid}", method = RequestMethod.POST)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.CREATED)
+    public Collection<Transfer> uploadFiles(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
+            throws IOException, FileUploadException, UploadException {
+
+        final ServletFileUpload upload = new ServletFileUpload();
+        final UploadRequest uploadRequest = getUploadRequest(request, orgGuid, upload);
+        return uploadService.processUpload(upload.getItemIterator(request), uploadRequest, true);
+    }
+
+
+    private UploadRequest getUploadRequest(HttpServletRequest request, UUID orgGuid, ServletFileUpload upload) {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         permissionVerifier.checkOrganizationAccess(orgGuid, auth);
 
-        final ServletFileUpload upload = new ServletFileUpload();
+
         final FileUploadListener listener = new FileUploadListener();
         upload.setProgressListener(listener);
-
         final UploadRequest uploadRequest = new UploadRequest(orgGuid, listener);
-        final UploadResponse uploadResponse = processUpload(upload.getItemIterator(request), uploadRequest);
-        dasClient.uploadCompleted(uploadResponse, "bearer " + tokenExtractor.apply(auth));
-
-        return uploadResponse;
-    }
-
-    private UploadResponse processUpload(FileItemIterator iterator, UploadRequest request)
-            throws IOException, FileUploadException {
-        final UploadResponseBuilder uploadResponseBuilder = UploadResponse.builder();
-
-        LOGGER.info("Upload started");
-        while (iterator.hasNext()) {
-            FileItemStream stream = iterator.next();
-            if (!stream.isFormField()) {
-                processFile(stream, request, uploadResponseBuilder);
-            } else {
-                processFormFiled(stream, uploadResponseBuilder);
-            }
-        }
-        LOGGER.info("Upload completed");
-
-        return uploadResponseBuilder.build();
-    }
-
-    private void processFile(FileItemStream stream, UploadRequest request, UploadResponseBuilder responseBuilder)
-        throws IOException {
-        final String fileName = stream.getName();
-        LOGGER.info("file: {}", fileName);
-        request.getListener().setFilename(fileName);
-        uploadService.upload(stream.openStream(), responseBuilder.setSource(fileName), request.getOrg());
-    }
-
-    private void processFormFiled(FileItemStream stream, UploadResponseBuilder responseBuilder)
-        throws IOException {
-        final String fieldName = stream.getFieldName();
-        final String fieldValue = Streams.asString(stream.openStream());
-        LOGGER.info("{} : {}", fieldName, fieldValue);
-        responseBuilder.setProperty(fieldName, fieldValue);
+        return uploadRequest;
     }
 }

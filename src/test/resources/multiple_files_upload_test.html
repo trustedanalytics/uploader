@@ -23,12 +23,12 @@
     <title></title>
 </head>
 <body>
-<form method="POST" enctype="multipart/form-data" action= "http://localhost:8080/rest/upload/8a0bdb27-56f8-4f6a-b25d">
+<form method="POST" enctype="multipart/form-data" action= "http://localhost:8080/rest/v1/files/8a0bdb27-56f8-4f6a-b25d">
     <input type="text" name="orgUUID"value="8a0bdb27-56f8-4f6a-b25d"><br/>
     <input type="text" name="title"value="example_title"><br/>
     <input type="text" name="category"value="science"><br/>
     <input type="checkbox" name="public" value="true"><br/>
-    File to upload: <input type="file" name="upfile"><br/>
+    File to upload: <input type="file" name="upfile" multiple=""><br/>
     <br/>
     <input type="submit" value="Press"> to upload the file!
 </form>

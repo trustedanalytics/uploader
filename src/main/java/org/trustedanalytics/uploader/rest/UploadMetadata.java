@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 Intel Corporation
+ * Copyright (c) 2016 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
  */
 package org.trustedanalytics.uploader.rest;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-public class UploadResponse {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UploadResponse.class);
+public class UploadMetadata {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadMetadata.class);
 
     @JsonProperty("source")
     private final String source;
@@ -36,83 +36,84 @@ public class UploadResponse {
     private final String category;
     @JsonProperty("publicRequest")
     private final boolean publicAccess;
-    @JsonProperty("objectStoreId")
-    private final String objectStoreId;
-    @JsonProperty("idInObjectStore")
-    private final String savedObjectId;
 
-    private UploadResponse(UploadResponseBuilder builder) {
+    private UploadMetadata(UploadMetadataBuilder builder) {
         this.source = Objects.requireNonNull(builder.source, "source is required");
         this.orgUUID = Objects.requireNonNull(builder.orgUUID, "organization guid is required");
         this.title = Objects.requireNonNull(builder.title, "title is required");
         this.category = Objects.requireNonNull(builder.category, "category is required");
-        this.objectStoreId = Objects.requireNonNull(builder.objectStoreId, "object store id is required");
-        this.savedObjectId = Objects.requireNonNull(builder.savedObjectId, "saved object id is required");
         this.publicAccess = builder.publicAccess;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getOrgUUID() {
+        return orgUUID;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public boolean getPublicAccess() {
+        return publicAccess;
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("source", source)
-            .add("orgUUID", orgUUID)
-            .add("title", title)
-            .add("category", category)
-            .add("publicAccess", publicAccess)
-            .add("objectStoreId", objectStoreId)
-            .add("savedObjectId", savedObjectId)
-            .toString();
+                .add("source", source)
+                .add("orgUUID", orgUUID)
+                .add("title", title)
+                .add("category", category)
+                .add("publicAccess", publicAccess)
+                .toString();
     }
 
-    public static UploadResponseBuilder builder() {
-        return new UploadResponseBuilder();
+    public static UploadMetadataBuilder builder() {
+        return new UploadMetadataBuilder();
     }
 
-    public static class UploadResponseBuilder {
+    public static class UploadMetadataBuilder {
+
         private String source;
         private String orgUUID;
         private String title;
         private String category = "other";
         private boolean publicAccess = false;
-        private String objectStoreId;
-        private String savedObjectId;
 
-        public UploadResponseBuilder setSource(String name) {
+        public UploadMetadataBuilder setSource(String name) {
             this.source = name;
             return this;
         }
 
-        public UploadResponseBuilder setOrgUUID(String orgUUID) {
+        public UploadMetadataBuilder setOrgUUID(String orgUUID) {
             this.orgUUID = orgUUID;
             return this;
         }
 
-        public UploadResponseBuilder setTitle(String title) {
+        public UploadMetadataBuilder setTitle(String title) {
             this.title = title;
             return this;
         }
 
-        public UploadResponseBuilder setCategory(String category) {
+        public UploadMetadataBuilder setCategory(String category) {
             this.category = category;
             return this;
         }
 
-        public UploadResponseBuilder setPublicAccess(boolean publicAccess) {
+        public UploadMetadataBuilder setPublicAccess(boolean publicAccess) {
             this.publicAccess = publicAccess;
             return this;
         }
 
-        public UploadResponseBuilder setObjectStoreId(String objectStoreId) {
-            this.objectStoreId = objectStoreId;
-            return this;
-        }
-
-        public UploadResponseBuilder setSavedObjectId(String savedObjectId) {
-            this.savedObjectId = savedObjectId;
-            return this;
-        }
-
-        public UploadResponseBuilder setProperty(String key, String value) {
+        public UploadMetadataBuilder setProperty(String key, String value) {
             switch (key.toLowerCase()) {
                 case "title":
                     return setTitle(value);
@@ -128,8 +129,8 @@ public class UploadResponse {
             }
         }
 
-        public UploadResponse build() {
-            return new UploadResponse(this);
+        public UploadMetadata build() {
+            return new UploadMetadata(this);
         }
     }
 }

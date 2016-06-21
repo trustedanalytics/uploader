@@ -64,4 +64,9 @@ public class UploadExceptionHandler {
         RestErrorHandler defaultErrorHandler = new RestErrorHandler();
         defaultErrorHandler.handleException(e, response);
     }
+
+    @ExceptionHandler(UploadException.class)
+    public void handleUploadException(UploadException e, HttpServletResponse response) throws IOException {
+        ErrorLogger.logAndSendErrorResponse(LOGGER, response, INTERNAL_SERVER_ERROR, e.getMessage(), e);
+    }
 }

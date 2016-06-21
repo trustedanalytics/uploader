@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.uploader;
 
+import feign.Logger.Level;
 import org.trustedanalytics.store.ObjectStoreFactory;
 import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.client.ScramblingSlf4jLogger;
@@ -22,11 +23,10 @@ import org.trustedanalytics.uploader.client.UserManagementClient;
 import org.trustedanalytics.uploader.core.stream.consumer.ObjectStoreStreamConsumer;
 import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
 import org.trustedanalytics.uploader.rest.FeignErrorDecoder;
-import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
+import org.trustedanalytics.uploader.rest.Transfer;
 import org.trustedanalytics.uploader.security.OrgPermissionVerifier;
 
 import feign.Feign;
-import feign.Logger;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 
@@ -51,7 +51,7 @@ public class UploaderConfigurationCloud {
     private String userManagementUrl;
 
     @Bean
-    public TriConsumer<InputStream, UploadResponseBuilder, UUID> streamConsumer(
+    public TriConsumer<InputStream, Transfer, UUID> streamConsumer(
             ObjectStoreFactory<UUID> store) {
         return new ObjectStoreStreamConsumer(store);
     }
@@ -64,20 +64,20 @@ public class UploaderConfigurationCloud {
 
     @Bean
     public DataAcquisitionClient dataAcquisitionClient() {
-        return getClient(DataAcquisitionClient.class, dataAcquisitionUrl);
+        return getClient(DataAcquisitionClient.class, dataAcquisitionUrl, Level.FULL);
     }
 
     @Bean
     public UserManagementClient userManagementClient() {
-        return getClient(UserManagementClient.class, userManagementUrl);
+        return getClient(UserManagementClient.class, userManagementUrl, Level.BASIC);
     }
 
-    private <T> T getClient(Class<T> clientType, String url) {
+    private <T> T getClient(Class<T> clientType, String url, Level logLevel) {
         return Feign.builder()
                 .encoder(new JacksonEncoder())
                 .decoder(new JacksonDecoder())
-                .logger(new ScramblingSlf4jLogger(clientType.getClass()))
-                .logLevel(Logger.Level.FULL)
+                .logger(new ScramblingSlf4jLogger(clientType))
+                .logLevel(logLevel)
                 .errorDecoder(new FeignErrorDecoder())
                 .target(clientType, url);
     }

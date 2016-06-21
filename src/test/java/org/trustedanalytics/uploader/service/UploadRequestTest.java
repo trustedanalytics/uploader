@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 Intel Corporation
+ * Copyright (c) 2016 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,74 +15,64 @@
  */
 package org.trustedanalytics.uploader.service;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
-
-import org.trustedanalytics.uploader.rest.UploadResponse;
-import org.trustedanalytics.uploader.rest.UploadResponse.UploadResponseBuilder;
 
 import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.trustedanalytics.uploader.rest.UploadMetadata;
+import org.trustedanalytics.uploader.rest.UploadMetadata.UploadMetadataBuilder;
 
 import java.util.Arrays;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+
 @RunWith(Parameterized.class)
 public class UploadRequestTest {
-
     @Parameterized.Parameters(name = "{index} - {0}")
     public static Iterable<Object[]> data() {
         // @formatter:off
         return Arrays.asList(
-            new Object[][] {
-                {"test without category specified", UploadResponse.builder()
-                    .setOrgUUID(UUID.randomUUID().toString())
-                    .setPublicAccess(true)
-                    .setSource("source")
-                    .setTitle("title")
-                    .setObjectStoreId("objectStoreId")
-                    .setSavedObjectId("savedObjectId"), containsString("other")},
+                new Object[][]{
+                        {"test without category specified", UploadMetadata.builder()
+                                .setOrgUUID(UUID.randomUUID().toString())
+                                .setPublicAccess(true)
+                                .setSource("source")
+                                .setTitle("title"), containsString("other")},
 
-                {"test with category specified", UploadResponse.builder()
-                    .setOrgUUID(UUID.randomUUID().toString())
-                    .setCategory("finance")
-                    .setPublicAccess(true)
-                    .setSource("source")
-                    .setTitle("title")
-                    .setObjectStoreId("objectStoreId")
-                    .setSavedObjectId("savedObjectId"), containsString("finance")},
+                        {"test with category specified", UploadMetadata.builder()
+                                .setOrgUUID(UUID.randomUUID().toString())
+                                .setCategory("finance")
+                                .setPublicAccess(true)
+                                .setSource("source")
+                                .setTitle("title"), containsString("finance")},
 
-                {"test without public access specified", UploadResponse.builder()
-                    .setOrgUUID(UUID.randomUUID().toString())
-                    .setCategory("finance")
-                    .setSource("source")
-                    .setTitle("title")
-                    .setObjectStoreId("objectStoreId")
-                    .setSavedObjectId("savedObjectId"), containsString("false")},
+                        {"test without public access specified", UploadMetadata.builder()
+                                .setOrgUUID(UUID.randomUUID().toString())
+                                .setCategory("finance")
+                                .setSource("source")
+                                .setTitle("title"), containsString("false")},
 
-                {"test with public access specified", UploadResponse.builder()
-                    .setOrgUUID(UUID.randomUUID().toString())
-                    .setPublicAccess(true)
-                    .setCategory("finance")
-                    .setSource("source")
-                    .setTitle("title")
-                    .setObjectStoreId("objectStoreId")
-                    .setSavedObjectId("savedObjectId"), containsString("true")},
-                {"test with form fields", UploadResponse.builder()
-                    .setSource("source")
-                    .setProperty("orguuid", UUID.randomUUID().toString())
-                    .setProperty("publicRequest", "true")
-                    .setProperty("category", "finance")
-                    .setProperty("title", "title")
-                    .setObjectStoreId("objectStoreId")
-                    .setSavedObjectId("savedObjectId"), allOf(containsString("title"),
-                                                              containsString("true"),
-                                                              containsString("finance"))
-                }
-            });
+                        {"test with public access specified", UploadMetadata.builder()
+                                .setOrgUUID(UUID.randomUUID().toString())
+                                .setPublicAccess(true)
+                                .setCategory("finance")
+                                .setSource("source")
+                                .setTitle("title"),  containsString("true")},
+
+                        {"test with form fields", UploadMetadata.builder()
+                                .setSource("source")
+                                .setProperty("orguuid", UUID.randomUUID().toString())
+                                .setProperty("publicRequest", "true")
+                                .setProperty("category", "finance")
+                                .setProperty("title", "title"), allOf(containsString("title"),
+                                containsString("true"),
+                                containsString("finance"))
+                        }
+                });
         // @formatter:on
     }
 
@@ -90,7 +80,7 @@ public class UploadRequestTest {
     public String testName;
 
     @Parameterized.Parameter(1)
-    public UploadResponseBuilder builder;
+    public UploadMetadataBuilder builder;
 
     @Parameterized.Parameter(2)
     public Matcher<String> matcher;
