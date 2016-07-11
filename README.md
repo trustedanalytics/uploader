@@ -69,5 +69,17 @@ Example response:
 ```
 Files are stored on HDFS and title of the dataset is the same as filename without extension.
 In repository bash script was placed which helps sending requests for upload multiple files.
-To use it locally, log in to CF and after run script with command: `source multiple_upload_curl` enter organization name.
-If you provide environment domain as argument, you can upload files using uploader service on environment `source multiple_upload_curl <domain>`
+To use it locally:
+ 1. Log in to Cloud Foundry
+ 2. Give script executable permissions
+ 3. Run the script and specify organization and catalog with files
+
+```
+./multiple_upload_curl --org=<organization name> --dir=<path>
+```
+If you provide environment domain as argument, you can upload files using uploader service on environment
+
+```
+./multiple_upload_curl --org=<organization name> --dir=<path> --domain=<domain>
+```
+Default files are uploaded on localhost.
