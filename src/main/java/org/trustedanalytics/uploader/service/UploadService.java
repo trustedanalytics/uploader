@@ -47,6 +47,8 @@ import java.util.function.Function;
 
 import javax.security.auth.login.LoginException;
 
+import static com.google.common.base.Preconditions.checkState;
+
 @Service
 public class UploadService {
 
@@ -89,6 +91,7 @@ public class UploadService {
                 processFormField(uploadMetadataBuilder, stream);
             }
         }
+        checkState(!transfers.isEmpty(), "Request does not contain any file");
         return transfers;
     }
 
