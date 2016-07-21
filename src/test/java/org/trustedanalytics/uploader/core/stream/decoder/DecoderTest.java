@@ -36,10 +36,10 @@ public class DecoderTest {
         // @formatter:off
         return Arrays.asList(
             new Object[][] {
-                {new ZipStreamDecoder(), "test.zip", "test"},
-                {new GzipStreamDecoder(), "test.gz", "test"},
-                {new ZipStreamDecoder().compose(new GzipStreamDecoder()), "test.zip", "test"},
-                {new ZipStreamDecoder().compose(new GzipStreamDecoder()), "test.gz", "test"}
+                {new ZipStreamDecoder(), "upload_html/test.zip", "test"},
+                {new GzipStreamDecoder(), "upload_html/test.gz", "test"},
+                {new ZipStreamDecoder().compose(new GzipStreamDecoder()), "upload_html/test.zip", "test"},
+                {new ZipStreamDecoder().compose(new GzipStreamDecoder()), "upload_html/test.gz", "test"}
             });
         // @formatter:on
     }

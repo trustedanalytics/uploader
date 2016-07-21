@@ -6,11 +6,25 @@ Service for uploading data
 
 # Local development
 
-This command will enable local development and set local directory ("../uploader/target/uploads" - to retrieve this path we are using "user.dir" system property) for file upload:
+For locally file upload is used directory "../uploader/target/uploads" (to retrieve this path we are using "user.dir" system property):
+To run the service locally, the following environment variables need to be defined:
 
-    $ SPRING_PROFILES_ACTIVE=local mvn clean spring-boot:run
+* `VCAP_SERVICES`
+* `HDFS_USER`
 
-For generating proper request to uploader you could use: src/test/resources/upload_test.html and multiple_files_upload_test.html
+In Kerberos environment two additional variables are required:
+
+* `KERBEROS_USER`
+* `KERBEROS_PASS`
+
+To run the application, type:
+
+    mvn spring-boot:run -Dspring.profiles.active=local
+
+To change the default listening port (8080), add an additional option -Dserver.port=9994
+
+For generating proper request to uploader you could use: src/test/resources/upload_html/upload_test.html and multiple_files_upload_test.html
+After open it in web browser, choose files from disk. Form in multiple_files_upload_test.html allows multiple selections.
 
 # Calling upload with REST API
 
@@ -67,8 +81,11 @@ Example response:
 ]
 
 ```
+
+`ObjectStoreId` is the path to file on HDFS.
+
 Files are stored on HDFS and title of the dataset is the same as filename without extension.
-To upload files you can run bash scripts multiple_upload_curl and upload_curl from upload_test_scripts directory.
+To upload files you can run bash scripts multiple_upload_curl and upload_curl from upload_scripts directory.
 To use it:
  1. Log in to Cloud Foundry
  2. Give script executable permissions
@@ -92,3 +109,16 @@ or
 ```
 ./multiple_upload_curl --org=<organization name> --dir='<path>' --domain=<domain>
 ```
+
+If you change port while starting application, you should run script with additional argument `--port=<port number>`
+# Uploading files with curl
+
+* upload single file
+```
+curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=<org guid> -F category=<category> -F title=<title> -F upload=@<path to file> http://localhost:8080/rest/upload/<org guid>
+```
+* upload multiple files
+```
+curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=<org guid> -F category=<category> -F title=<title> -F upload=@<path to file> http://localhost:8080/rest/v1/files/<org guid>
+```
+You can add as many `-F upload=@<file>` as you want if you upload multiple files. You can put path to file which you want upload or filename from current directory.

@@ -26,6 +26,9 @@ while [ $# -gt 0 ]; do
     --domain=*)
       domain="${1#*=}"
       ;;
+    --port=*)
+      port="${1#*=}"
+      ;;
     *)
       printf "Error: Invalid argument.\n"
       exit 1
@@ -33,8 +36,18 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+if [[ -d "$file" ]]
+then
+  printf "Error: The path parameter specifies a directory path, not a file path.\n"
+  exit 1
+fi
+
 if [ "$domain" != "" ]; then
-	curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data -F upload=@$file http://hdfs-uploader.$domain/rest/v1/files/`cf org $org --guid` | jq .;
+	curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data -F upload=@$file http://hdfs-uploader.$domain/rest/v1/files/`cf org $org --guid`;
 else
-	curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data -F upload=@$file http://localhost:8080/rest/v1/files/`cf org $org --guid` | jq .;
+    if [ "$port" != "" ]; then
+	    curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data -F upload=@$file http://localhost:$port/rest/v1/files/`cf org $org --guid`;
+	else
+	    curl -H "Authorization: `cf oauth-token | grep bearer`" -v -F orgUUID=`cf org $org --guid` -F category=business -F title=upload-data -F upload=@$file http://localhost:8080/rest/v1/files/`cf org $org --guid`;
+    fi
 fi
