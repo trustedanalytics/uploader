@@ -17,15 +17,12 @@ package org.trustedanalytics.uploader.rest;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import org.trustedanalytics.uploader.client.DataAcquisitionClient;
 import org.trustedanalytics.uploader.core.listener.FileUploadListener;
 import org.trustedanalytics.uploader.security.PermissionVerifier;
 import org.trustedanalytics.uploader.service.UploadService;
 
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -39,9 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -59,23 +54,14 @@ import io.swagger.annotations.ApiResponses;
  */
 @RestController
 public class UploadController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UploadController.class);
-
     private final UploadService uploadService;
-    private final Function<Authentication, String> tokenExtractor;
-    private final DataAcquisitionClient dasClient;
     private final PermissionVerifier permissionVerifier;
 
     @Autowired
-    public UploadController(UploadService uploadService,
-                            Function<Authentication, String> tokenExtractor, DataAcquisitionClient dasClient,
-                            PermissionVerifier permissionVerifier) {
+    public UploadController(UploadService uploadService, PermissionVerifier permissionVerifier) {
         this.uploadService = uploadService;
-        this.tokenExtractor = tokenExtractor;
-        this.dasClient = dasClient;
         this.permissionVerifier = permissionVerifier;
     }
-
 
     @ApiOperation(
             value = "Uploads file as multipart content together with metadata.",
@@ -91,10 +77,10 @@ public class UploadController {
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
     public Transfer uploadFile(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
-            throws IOException, FileUploadException, UploadException {
+            throws IOException, FileUploadException {
 
         final ServletFileUpload upload = new ServletFileUpload();
-        final UploadRequest uploadRequest = getUploadRequest(request, orgGuid, upload);
+        final UploadRequest uploadRequest = toUploadRequest(request, orgGuid, upload);
         return uploadService.processUpload(upload.getItemIterator(request), uploadRequest, false).get(0);
     }
 
@@ -113,24 +99,22 @@ public class UploadController {
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
     public Collection<Transfer> uploadFiles(HttpServletRequest request, @PathVariable("orgGuid") UUID orgGuid)
-            throws IOException, FileUploadException, UploadException {
+            throws IOException, FileUploadException {
 
         final ServletFileUpload upload = new ServletFileUpload();
-        final UploadRequest uploadRequest = getUploadRequest(request, orgGuid, upload);
+        final UploadRequest uploadRequest = toUploadRequest(request, orgGuid, upload);
         return uploadService.processUpload(upload.getItemIterator(request), uploadRequest, true);
     }
 
 
-    private UploadRequest getUploadRequest(HttpServletRequest request, UUID orgGuid, ServletFileUpload upload) {
+    private UploadRequest toUploadRequest(HttpServletRequest request, UUID orgGuid, ServletFileUpload upload) {
         checkArgument(ServletFileUpload.isMultipartContent(request), "No multipart content");
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         permissionVerifier.checkOrganizationAccess(orgGuid, auth);
 
-
         final FileUploadListener listener = new FileUploadListener();
         upload.setProgressListener(listener);
-        final UploadRequest uploadRequest = new UploadRequest(orgGuid, listener);
-        return uploadRequest;
+        return new UploadRequest(orgGuid, listener);
     }
 }

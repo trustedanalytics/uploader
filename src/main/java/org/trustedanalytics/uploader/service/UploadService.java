@@ -15,27 +15,29 @@
  */
 package org.trustedanalytics.uploader.service;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import org.trustedanalytics.uploader.client.DataAcquisitionClient;
+import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
+import org.trustedanalytics.uploader.rest.Transfer;
+import org.trustedanalytics.uploader.rest.UploadException;
+import org.trustedanalytics.uploader.rest.UploadMetadata;
+import org.trustedanalytics.uploader.rest.UploadMetadata.UploadMetadataBuilder;
+import org.trustedanalytics.uploader.rest.UploadRequest;
+
 import org.apache.commons.io.FilenameUtils;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.trustedanalytics.uploader.client.DataAcquisitionClient;
-import org.trustedanalytics.uploader.core.stream.consumer.TriConsumer;
-import org.trustedanalytics.uploader.rest.UploadException;
-import org.trustedanalytics.uploader.rest.Transfer;
-
-import org.apache.hadoop.security.AccessControlException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.trustedanalytics.uploader.rest.UploadMetadata;
-import org.trustedanalytics.uploader.rest.UploadMetadata.UploadMetadataBuilder;
-import org.trustedanalytics.uploader.rest.UploadRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,8 +48,6 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import javax.security.auth.login.LoginException;
-
-import static com.google.common.base.Preconditions.checkState;
 
 @Service
 public class UploadService {
@@ -73,7 +73,7 @@ public class UploadService {
     }
 
     public List<Transfer> processUpload(FileItemIterator iterator, UploadRequest request, boolean multipleFiles)
-            throws IOException, FileUploadException, UploadException {
+            throws IOException, FileUploadException {
         final UploadMetadataBuilder uploadMetadataBuilder = UploadMetadata.builder();
         final List<Transfer> transfers = new ArrayList<>();
         while(iterator.hasNext()) {
@@ -96,7 +96,7 @@ public class UploadService {
     }
 
     private void doProcess(FileItemStream fileItemStream, UploadMetadata uploadMetadata, Function<Transfer, Transfer> mapper,
-                           List<Transfer> transfers) throws UploadException {
+                           List<Transfer> transfers) {
         try (InputStream input = streamDecoder.apply(fileItemStream.openStream())) {
             final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             Transfer transfer = new Transfer(uploadMetadata);

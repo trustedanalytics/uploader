@@ -16,17 +16,13 @@
 package org.trustedanalytics.uploader.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
+import lombok.Data;
+
 @Data
 public class Transfer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Transfer.class);
-
     @JsonProperty("source")
     private String source;
     @JsonProperty("orgUUID")
